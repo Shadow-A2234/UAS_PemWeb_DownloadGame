@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shadow Pixel Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+</head>
+<body>
+
+<!-- Overlay transisi -->
+<div id="transition-overlay"></div>
+
+<!-- Audio -->
+<audio id="click-sound" src="assets/audio/click-retro.mp3"></audio>
+<audio id="bg-music" src="assets/audio/Pixels (Slowed).mp3" loop autoplay></audio>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="logo">
+    <a href="index.html" class="text-2xl pixel-font">Shadow Pixel Game</a>
+  </div>
+  <div class="menu-toggle" id="mobile-menu">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </div>
+  <ul class="menu">
+    <li><a href="index.html" class="menu-link pixel-font">Home</a></li>
+    <li><a href="#games" class="menu-link pixel-font">Games</a></li>
+    <li><a href="#about" class="menu-link pixel-font">About</a></li>
+    <li><a href="login.php" class="menu-link pixel-font">Login</a></li>
+    <li><a href="register.php" class="menu-link pixel-font">Register</a></li>
+    <button id="toggle-audio">Mute</button>
+  </ul>
+</nav>
+
+<!-- Konten utama -->
+<div class="container">
+  <video id="bg-video" autoplay loop muted>
+    <source src="assets/video/game1.mp4" type="video/mp4" />
+  </video>
+  <div class="overlay">
+    <h1 class="text-4xl md:text-5xl pixel-font mb-8 drop-shadow-xl">Welcome to Pixel Game Hub</h1>
+    <a href="login.php" class="btn pixel-font">Get Started</a>
+  </div>
+</div>
+
+<!-- Script -->
+<script>
+const overlay = document.getElementById('transition-overlay');
+const clickSound = document.getElementById('click-sound');
+const bgMusic = document.getElementById('bg-music');
+const toggleAudio = document.getElementById('toggle-audio');
+
+// Fade in saat halaman dimuat
+window.addEventListener('DOMContentLoaded', () => {
+  overlay.classList.add('fade-in');
+  setTimeout(() => overlay.classList.remove('fade-in'), 700);
+});
+
+// Efek klik + transisi saat navigasi
+document.querySelectorAll('a[href]').forEach(link => {
+  link.addEventListener('click', function (e) {
+    const href = this.getAttribute('href');
+    if (href && !href.startsWith('#') && !href.startsWith('javascript')) {
+      e.preventDefault();
+      clickSound.play();
+      overlay.classList.add('fade-out');
+      setTimeout(() => {
+        window.location.href = href;
+      }, 500);
+    }
+  });
+});
+
+// Toggle musik
+toggleAudio.addEventListener('click', () => {
+  if (bgMusic.paused) {
+    bgMusic.play();
+    toggleAudio.textContent = 'Mute';
+  } else {
+    bgMusic.pause();
+    toggleAudio.textContent = 'Unmute';
+  }
+});
+</script>
+
+</body>
+</html>

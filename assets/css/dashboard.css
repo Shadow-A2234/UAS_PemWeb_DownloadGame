@@ -1,0 +1,49 @@
+.pixel-font {
+    font-family: 'Press Start 2P', cursive;
+}
+.btn {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    display: inline-block;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+.btn:hover {
+    background-color: #e60000;
+}
+#transition-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+}
+#transition-overlay.fade-in {
+    animation: zoomFadeIn 0.6s forwards;
+}
+#transition-overlay.fade-out {
+    animation: slideFadeOut 0.5s forwards;
+}
+@keyframes zoomFadeIn {
+    0% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1); }
+}
+@keyframes slideFadeOut {
+    0% { opacity: 0; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(-50px); }
+}
+.game-card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transform: scale(1);
+}
+.game-card-hover:hover {
+    transform: scale(1.05) translateY(-6px);
+    box-shadow: 0 12px 24px rgba(255, 77, 77, 0.3);
+    z-index: 5;
+}
