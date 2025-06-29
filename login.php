@@ -10,7 +10,8 @@ if ($_POST) {
     $username = $_POST['username'];
     $password = $_POST['password'];
     
-    $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ?");
+    // Ambil role dari database juga
+    $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -20,6 +21,7 @@ if ($_POST) {
         if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role']; // Disesuaikan dari database (admin/user)
             header("Location: dashboard.php");
             exit();
         } else {

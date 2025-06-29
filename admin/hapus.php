@@ -1,28 +1,17 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit();
 }
-
 require_once '../config.php';
 
-if (!isset($_GET['id'])) {
-    header("Location: index.php");
-    exit();
+if (isset($_GET['id'])) {
+    $id = intval($_GET['id']);
+    $stmt = $conn->prepare("DELETE FROM games WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
 }
-
-$id = $_GET['id'];
-
-// Hapus data game
-$stmt = $conn->prepare("DELETE FROM games WHERE id = ?");
-$stmt->bind_param("i", $id);
-
-if ($stmt->execute()) {
-    header("Location: index.php?status=deleted");
-    exit();
-} else {
-    echo "Gagal menghapus game.";
-}
-$stmt->close();
-?>
+header("Location: list_game.php");
+exit();

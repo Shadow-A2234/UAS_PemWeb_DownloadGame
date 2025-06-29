@@ -1,31 +1,18 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit();
 }
 require_once '../config.php';
 
-if (!isset($_GET['id'])) {
-    header("Location: index.php");
-    exit();
-}
-
-$id = $_GET['id'];
-$error = '';
-$success = '';
-
-// Ambil data game berdasarkan ID
+$id = $_GET['id'] ?? 0;
 $stmt = $conn->prepare("SELECT * FROM games WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    die("Game tidak ditemukan.");
-}
-
 $game = $result->fetch_assoc();
+$stmt->close();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $title = $_POST['title'];
@@ -33,25 +20,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $video = $_POST['video_path'];
     $image = $_POST['image_path'];
     $download = $_POST['download_link'];
-    $available = isset($_POST['is_available']) ? 1 : 0;
+    $is_available = isset($_POST['coming_soon']) ? 0 : 1;
 
-    $update = $conn->prepare("UPDATE games SET title=?, description=?, video_path=?, image_path=?, download_link=?, is_available=? WHERE id=?");
-    $update->bind_param("ssssssi", $title, $description, $video, $image, $download, $available, $id);
+    $stmt = $conn->prepare("UPDATE games SET title=?, description=?, video_path=?, image_path=?, download_link=?, is_available=? WHERE id=?");
+    $stmt->bind_param("ssssssi", $title, $description, $video, $image, $download, $is_available, $id);
+    $stmt->execute();
+    $stmt->close();
 
-    if ($update->execute()) {
-        $success = "Game berhasil diperbarui.";
-        $game = array_merge($game, $_POST); // update tampilan
-    } else {
-        $error = "Gagal memperbarui data.";
-    }
-    $update->close();
+    header("Location: list_game.php");
+    exit();
 }
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>Edit Game - Admin</title>
+  <title>Edit Game</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -70,30 +55,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         border-radius: 4px;
     }
     .btn {
-        background: #ff4d4d;
+        background: #00bfff;
         color: white;
         padding: 10px 20px;
         border-radius: 5px;
         text-decoration: none;
-        display: inline-block;
-        margin-top: 1rem;
     }
     .btn:hover {
-        background: #e60000;
+        background: #0099cc;
     }
-    .success { color: #00ff88; margin-bottom: 1rem; }
-    .error { color: #ff4d4d; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
 
 <h1>Edit Game</h1>
-
-<?php if ($success): ?>
-  <p class="success"><?= $success ?></p>
-<?php elseif ($error): ?>
-  <p class="error"><?= $error ?></p>
-<?php endif; ?>
 
 <form method="POST">
   <label>Judul Game:</label>
@@ -112,12 +87,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <input type="text" name="download_link" value="<?= htmlspecialchars($game['download_link']) ?>">
 
   <label>
-    <input type="checkbox" name="is_available" <?= $game['is_available'] ? 'checked' : '' ?>>
-    Tersedia untuk diunduh
-  </label><br>
+    <input type="checkbox" name="coming_soon" value="1" <?= $game['is_available'] ? '' : 'checked' ?>>
+    Tandai sebagai Coming Soon
+  </label>
 
+  <br><br>
   <button type="submit" class="btn">Simpan Perubahan</button>
-  <a href="index.php" class="btn">Kembali</a>
+  <a href="list_game.php" class="btn">Kembali</a>
 </form>
 
 </body>

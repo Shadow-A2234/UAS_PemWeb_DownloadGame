@@ -1,6 +1,7 @@
-<?php
+
+<?php 
 session_start();
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../login.php");
     exit();
 }
@@ -12,19 +13,42 @@ $error = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $title = $_POST['title'];
     $description = $_POST['description'];
-    $video = $_POST['video_path'];
-    $image = $_POST['image_path'];
     $download = $_POST['download_link'];
 
-    $stmt = $conn->prepare("INSERT INTO games (title, description, video_path, image_path, download_link, is_available) VALUES (?, ?, ?, ?, ?, 0)");
-    $stmt->bind_param("sssss", $title, $description, $video, $image, $download);
+    // Folder tujuan upload
+    $image_dir = '../assets/img/';
+    $video_dir = '../assets/video/';
 
-    if ($stmt->execute()) {
-        $success = "Game berhasil ditambahkan!";
+    // Ambil nama file
+    $image_name = basename($_FILES['image_file']['name']);
+    $video_name = basename($_FILES['video_file']['name']);
+
+    $image_path = $image_dir . $image_name;
+    $video_path = $video_dir . $video_name;
+
+    // Upload file
+    if (move_uploaded_file($_FILES['image_file']['tmp_name'], $image_path) &&
+        move_uploaded_file($_FILES['video_file']['tmp_name'], $video_path)) {
+
+        // Simpan ke database (path disesuaikan untuk dashboard)
+        $image_db_path = 'assets/img/' . $image_name;
+        $video_db_path = 'assets/video/' . $video_name;
+
+        $is_available = isset($_POST['coming_soon']) ? 0 : 1;
+
+        $stmt = $conn->prepare("INSERT INTO games (title, description, video_path, image_path, download_link, is_available) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssi", $title, $description, $video_db_path, $image_db_path, $download, $is_available);
+
+        if ($stmt->execute()) {
+            $success = "Game berhasil ditambahkan!";
+        } else {
+            $error = "Gagal menyimpan ke database.";
+        }
+        $stmt->close();
+
     } else {
-        $error = "Gagal menambahkan game.";
+        $error = "Gagal mengupload file.";
     }
-    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -75,24 +99,31 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <p class="error"><?= $error ?></p>
 <?php endif; ?>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
+
   <label>Judul Game:</label>
   <input type="text" name="title" required>
 
   <label>Deskripsi:</label>
   <textarea name="description" rows="4" required></textarea>
 
-  <label>Video Path (mp4):</label>
-  <input type="text" name="video_path" placeholder="contoh: assets/video/game1.mp4">
+  <label>Pilih Video (mp4):</label>
+  <input type="file" name="video_file" accept="video/mp4" required>
 
-  <label>Image Path:</label>
-  <input type="text" name="image_path" placeholder="contoh: assets/img/game1.jpg">
+  <label>Pilih Gambar:</label>
+  <input type="file" name="image_file" accept="image/*" required>
 
   <label>Link Download:</label>
   <input type="text" name="download_link" placeholder="contoh: https://example.com/file.zip">
 
+  <label>
+  <input type="checkbox" name="coming_soon" value="1">
+  Tandai sebagai *Coming Soon*
+  </label>
+
+
   <button type="submit" class="btn">Simpan</button>
-  <a href="index.php" class="btn">Kembali</a>
+  <a href="../dashboard.php" class="btn">Kembali</a>
 </form>
 
 </body>
